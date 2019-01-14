@@ -1,4 +1,4 @@
 pwd
-ln -sf test logs
+#ln -sf test logs
 cd logs
 bash

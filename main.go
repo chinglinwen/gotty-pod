@@ -47,7 +47,9 @@ func main() {
 func runShell() {
 	pr, pw := io.Pipe()
 
-	cmd := exec.Command("bash", "-c", "./a.sh")
+	//cmd := exec.Command("bash", "-c", "./a.sh")
+	cmd := exec.Command("bash")
+	cmd.Dir = "logs"
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
 
