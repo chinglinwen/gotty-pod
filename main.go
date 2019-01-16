@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -11,8 +12,21 @@ import (
 	"strings"
 )
 
+var (
+	logBase = flag.String("b", "/data/fluentd", "log base directory on the host ( eg. /data/fluentd )")
+)
+
+func init() {
+	if *logBase == "" {
+		*logBase, _ = os.Getwd()
+	}
+}
+
 func main() {
+	flag.Parse()
+
 	fmt.Println("===welcome===")
+	fmt.Println("logbase: ", *logBase)
 	if len(os.Args) <= 2 {
 		fmt.Println("error: not enough arguments")
 		os.Exit(1)
@@ -36,6 +50,14 @@ func main() {
 		}
 		continue
 	}
+	var org, repo string
+	if git != "" {
+		giturl := strings.Split(git, "/")
+		if len(giturl) == 2 {
+			org = giturl[0]
+			repo = giturl[1]
+		}
+	}
 	fmt.Printf("user: %v, pass: %v\n", user, pass)
 
 	//proceed if auth ok
@@ -46,9 +68,15 @@ func main() {
 
 	// check command done
 
-	CreateLink("test", git)
-	fmt.Printf("enter into git: %v\n", git)
+	err := CreateLink(*logBase+"/"+git, git)
+	if err != nil {
+		fmt.Printf("try enter into %v error: %v\n", git, err)
+		return
+	}
+	fmt.Printf("enter into git: %v, org: %v, repo: %v\n", git, org, repo)
 	runShell(git)
+
+	//RemoveLink(git)
 }
 
 func runShell(git string) {
@@ -60,8 +88,9 @@ func runShell(git string) {
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
 
-	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, "PS1=%m %{${fg_bold[blue]}%}:: %{$reset_color%}%{${fg[green]}%}%3~ $(git_prompt_info)%{${fg_bold[$CARETCOLOR]}%}»%{${reset_color}%}")
+	// this doesn't work
+	// cmd.Env = os.Environ()
+	// cmd.Env = append(cmd.Env, "PS1=%m %{${fg_bold[blue]}%}:: %{$reset_color%}%{${fg[green]}%}%3~ $(git_prompt_info)%{${fg_bold[$CARETCOLOR]}%}»%{${reset_color}%}")
 
 	cmd.Stdin = pr
 	cmd.Start()
@@ -69,25 +98,20 @@ func runShell(git string) {
 	ch := make(chan string, 100)
 	chInput := make(chan string, 100)
 	stdinScan := bufio.NewScanner(os.Stdin)
-	stdinScan.Split(bufio.ScanRunes)
 	go func() {
 		fmt.Printf("[~] $: ")
-		var line string
 		for stdinScan.Scan() {
 			//fmt.Printf("[~] $: ")
-			c := stdinScan.Text()
-			if c != "\n" {
-				line += c
+			line := stdinScan.Text()
+			if line == "\n" || line == "\r" || line == "" {
+				continue
 			}
-			if c == "\n" {
-				err := CommandCheck(line)
-				line = ""
-				if err != nil {
-					fmt.Println(err)
-					continue
-				}
+			err := CommandCheck(line)
+			if err != nil {
+				fmt.Println(err)
+				continue
 			}
-			chInput <- c
+			chInput <- line
 			//fmt.Printf("got input: %v\n", string(line))
 		}
 	}()
@@ -95,7 +119,7 @@ func runShell(git string) {
 	// stdin
 	go func() {
 		for v := range chInput {
-			fmt.Fprintf(pw, "%v", v)
+			fmt.Fprintf(pw, "%v\n", v)
 			// if err != nil {
 			// 	fmt.Printf("write stdin err: %v\n", err)
 			// }
@@ -131,13 +155,47 @@ func runShell(git string) {
 
 var forbidList = []string{
 	"[.][.]",
+	"[<>]",
+	";",
+}
+
+// check at compiletime
+func init() {
+	for _, v := range forbidList {
+		_ = regexp.MustCompile(v)
+	}
+}
+
+var whiteList = []string{
+	"tail",
+	"grep",
+	"less",
+	"more",
+	"cat",
+	//"pwd",
+	"whoami",
+	"ls",
+	"echo",
+	"exit",
+	"head",
+	"tail",
 }
 
 // make some command can't execute, such as cd to parent directory
 func CommandCheck(text string) error {
+	cmdname := strings.Split(text, " ")[0]
+	for _, v := range whiteList {
+		if cmdname == v {
+			return charsCheck(text)
+		}
+	}
+	return fmt.Errorf("forbid command %s, allowed cmds: %v\n", cmdname, whiteList)
+}
+
+func charsCheck(text string) error {
 	for _, v := range forbidList {
-		if matched, _ := regexp.MatchString(v, text); matched {
-			return fmt.Errorf("forbid command %s", text)
+		if match := regexp.MustCompile(v).FindString(text); match != "" {
+			return fmt.Errorf("forbid character %q in %s\n", match, text)
 		}
 	}
 	return nil
