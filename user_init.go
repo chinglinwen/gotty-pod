@@ -5,8 +5,8 @@ import (
 	"os"
 )
 
-func CreateLink() {
+func CreateLink(src, dst string) {
 	//use user provied source
 	// target is fixed
-	os.Symlink("test", "logs")
+	os.Symlink(src, dst)
 }
