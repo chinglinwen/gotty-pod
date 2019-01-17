@@ -94,7 +94,7 @@ func main() {
 
 	if *runChild {
 		fmt.Println("===welcome===")
-		fmt.Println("logbase: ", *srcDir)
+		fmt.Println("logbase: ", git)
 		child(org, repo)
 	}
 	//proceed if auth ok

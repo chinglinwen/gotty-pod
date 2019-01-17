@@ -135,10 +135,10 @@ func (c *Container) CreateCMD() (cmd *exec.Cmd, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("change dir to / error, err: %v", err)
 	}
-	err = syscall.Mount("proc", "proc", "proc", 0, "")
-	if err != nil {
-		return nil, fmt.Errorf("mount proc error, err: %v", err)
-	}
+	// err = syscall.Mount("proc", "proc", "proc", 0, "")
+	// if err != nil {
+	// 	return nil, fmt.Errorf("mount proc error, err: %v", err)
+	// }
 	return
 }
 
