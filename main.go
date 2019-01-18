@@ -19,6 +19,9 @@ var (
 	rootFS = flag.String("rootfs", "/data/alpine", "rootfs on the host( eg. alpine rootfs")
 
 	runChild = flag.Bool("child", false, "run container")
+
+	listenPort = flag.Int("p", 0, "local port number")
+	dialAddr   = flag.String("dial", "", "dailing address for test listening (eg. localhost:8081)")
 )
 
 // the container can't be run directly, there need an parent
@@ -32,39 +35,54 @@ func run() {
 		Unshareflags: syscall.CLONE_NEWNS,
 	}
 
-	log.Fatal(cmd.Run())
+	cmd.Run()
+	//log.Println("exit")
 }
 
 // link doesn't mount files, can't set workDir
 // workDir can set in the log file structure only
-func child(org, repo string) {
+func child(org, repo, env string) {
+	//Listen()
+
 	// l := filepath.Join(*srcDir, org, repo)
 	// t := filepath.Join("/tmp/", org, repo)
 	// src := filepath.Join("/tmp/", org)
 	// CreateLink(l, t)
 	c := &container.Container{
 		Arg:        []string{"sh"},
-		Src:        filepath.Join(*srcDir, org, repo),
+		Src:        filepath.Join(*srcDir, env, org, repo),
 		Rootfs:     *rootFS,
 		Dst:        filepath.Join(*dstDir, org, repo),
 		CGroupName: repo,
 		Hostname:   repo,
 		WorkDir:    "/" + repo,
 	}
-	log.Fatal(c.Run())
+	err := c.Run()
+	if err != nil {
+		log.Println("run err", err)
+	}
+	log.Println("child exit")
 	// RemoveLink(t)
 }
 
 func main() {
 	flag.Parse()
 
-	if len(os.Args) <= 2 {
-		fmt.Println("error: not enough arguments")
+	if *dialAddr != "" {
+		Dial(*dialAddr)
+		os.Exit(0)
+	}
+
+	if len(os.Args) <= 1 {
+		fmt.Println("error: no git provided")
 		os.Exit(1)
 	}
 
-	var user, pass string
-	git := "no-git-provide"
+	var (
+		user string
+		git  string
+		env  string
+	)
 	for _, v := range os.Args[1:] {
 		arg := strings.Split(v, "=")
 		if len(arg) != 2 {
@@ -73,29 +91,44 @@ func main() {
 		if arg[0] == "user" {
 			user = arg[1]
 		}
-		if arg[0] == "pass" {
-			pass = arg[1]
-		}
 		if arg[0] == "git" {
 			git = arg[1]
 		}
+		if arg[0] == "env" {
+			env = arg[1]
+		}
 		continue
 	}
-	var org, repo string
-	if git != "" {
-		giturl := strings.Split(git, "/")
-		if len(giturl) == 2 {
-			org = giturl[0]
-			repo = giturl[1]
-		}
+	if user == "" {
+		fmt.Println("user arg not provided")
+		return
+	}
+	if git == "" {
+		fmt.Println("git arg not provided")
+		return
+	}
+	if env == "" {
+		fmt.Println("env arg not provided")
+		return
 	}
 
-	_, _ = user, pass
+	var org, repo string
+	giturl := strings.Split(git, "/")
+	if len(giturl) == 2 {
+		org = giturl[0]
+		repo = giturl[1]
+	}
 
 	if *runChild {
 		fmt.Println("===welcome===")
-		fmt.Println("logbase: ", git)
-		child(org, repo)
+		fmt.Printf("logbase: %v, env: %v\n", git, env)
+		err := UserValidate(user, git)
+		if err != nil {
+			log.Println("user validate error: ", err)
+			return
+		}
+
+		child(org, repo, env)
 	}
 	//proceed if auth ok
 	//auth check here

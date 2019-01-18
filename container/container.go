@@ -12,44 +12,15 @@ import (
 )
 
 type Container struct {
-	WorkDir  string
-	Arg      []string
-	Hostname string
-
+	WorkDir    string
+	Arg        []string
+	Hostname   string
 	CGroupName string
 	Src        string //log path
 	Dst        string //mount path
 	Rootfs     string //alpine rootfs
+	//Env        string
 }
-
-// // go run main.go run <cmd> <args>
-// func main() {
-// 	fmt.Println("starting...")
-// 	switch os.Args[1] {
-// 	case "run":
-// 		run()
-// 	case "child":
-// 		child()
-// 	default:
-// 		panic("help")
-// 	}
-// }
-
-// func Run() {
-// 	fmt.Printf("Running %v \n", os.Args[2:])
-
-// 	cmd := exec.Command("/proc/self/exe", append([]string{"child"}, os.Args[2:]...)...)
-// 	cmd.Stdin = os.Stdin
-// 	cmd.Stdout = os.Stdout
-// 	cmd.Stderr = os.Stderr
-// 	cmd.SysProcAttr = &syscall.SysProcAttr{
-// 		Cloneflags:   syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNS,
-// 		Unshareflags: syscall.CLONE_NEWNS,
-// 		//Credential: &Credential{Uid: uid, Gid: gid}
-// 	}
-
-// 	must(cmd.Run())
-// }
 
 // run in container way
 func (c *Container) Run() error {
@@ -68,6 +39,7 @@ func (c *Container) Run() error {
 	if err != nil {
 		return err
 	}
+
 	return cmd.Run()
 	// ptmx, err := pty.Start(cmd)
 	// if err != nil {
@@ -109,6 +81,13 @@ func (c *Container) CreateCMD() (cmd *exec.Cmd, err error) {
 
 	// cgroup setting
 	//createcgroup(c.CGroupName)
+
+	// var b bytes.Buffer
+	// // go func() {
+	// // 	time.Sleep(3 * time.Second)
+	// // 	os.Stdin.WriteString("pwd\n")
+	// // }()
+	// b.WriteString("pwd\n")
 
 	//cmd = exec.Command(c.Arg[0], c.Arg[1:]...)
 	cmd = exec.Command(c.Arg[0])
