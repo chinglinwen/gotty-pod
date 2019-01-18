@@ -25,7 +25,8 @@ var (
 )
 
 // the container can't be run directly, there need an parent
-func run() {
+func run(org, repo, env string) {
+
 	cmd := exec.Command("/proc/self/exe", append([]string{"-child"}, os.Args[1:]...)...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -36,6 +37,13 @@ func run() {
 	}
 
 	cmd.Run()
+
+	//dst := filepath.Join(*dstDir, org, repo)
+
+	// _, err := container.UnMount(dst)
+	// if err != nil {
+	// 	fmt.Println("umount err", err)
+	// }
 	//log.Println("exit")
 }
 
@@ -53,15 +61,16 @@ func child(org, repo, env string) {
 		Src:        filepath.Join(*srcDir, env, org, repo),
 		Rootfs:     *rootFS,
 		Dst:        filepath.Join(*dstDir, org, repo),
+		BindDst:    filepath.Join(*dstDir, org, repo, "logs"),
 		CGroupName: repo,
 		Hostname:   repo,
-		WorkDir:    "/" + repo,
+		WorkDir:    filepath.Join("/logs"),
 	}
 	err := c.Run()
 	if err != nil {
 		log.Println("run err", err)
 	}
-	log.Println("child exit")
+	log.Println("exit")
 	// RemoveLink(t)
 }
 
@@ -122,13 +131,15 @@ func main() {
 	if *runChild {
 		fmt.Println("===welcome===")
 		fmt.Printf("logbase: %v, env: %v\n", git, env)
+
 		err := UserValidate(user, git)
 		if err != nil {
 			log.Println("user validate error: ", err)
-			return
+			//return
 		}
 
 		child(org, repo, env)
+		return
 	}
 	//proceed if auth ok
 	//auth check here
@@ -136,7 +147,7 @@ func main() {
 	// do user init
 	// create link? or change user?
 
-	run()
+	run(org, repo, env)
 
 	// check command done
 

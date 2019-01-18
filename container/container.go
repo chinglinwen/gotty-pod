@@ -18,6 +18,7 @@ type Container struct {
 	CGroupName string
 	Src        string //log path
 	Dst        string //mount path
+	BindDst    string //bind dst
 	Rootfs     string //alpine rootfs
 	//Env        string
 }
@@ -29,10 +30,25 @@ func (c *Container) Run() error {
 		return err
 	}
 
-	_, err = Mount(c.Src, c.Rootfs, c.Dst)
+	// mount rootfs
+	_, err = Mount(c.Rootfs, c.Dst)
 	if err != nil {
 		return err
 	}
+
+	// bind logs directories
+	_, err = MountBind(c.Src, c.BindDst)
+	if err != nil {
+		return err
+	}
+
+	// no need to unmount
+	// defer func() {
+	// 	_, err = UnMount(c.Dst)
+	// 	if err != nil {
+	// 		fmt.Println("umount err", err)
+	// 	}
+	// }()
 
 	//fmt.Printf("Running %v \n", os.Args[2:])
 	cmd, err := c.CreateCMD()
@@ -40,7 +56,7 @@ func (c *Container) Run() error {
 		return err
 	}
 
-	return cmd.Run()
+	cmd.Run()
 	// ptmx, err := pty.Start(cmd)
 	// if err != nil {
 	// 	return fmt.Errorf("start cmd error: %v", err)
@@ -69,11 +85,6 @@ func (c *Container) Run() error {
 	// go func() { _, _ = io.Copy(ptmx, os.Stdin) }()
 	// _, _ = io.Copy(os.Stdout, ptmx)
 
-	_, err = UnMount(c.Dst)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -94,7 +105,7 @@ func (c *Container) CreateCMD() (cmd *exec.Cmd, err error) {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	//cmd.Dir = c.WorkDir
+	cmd.Dir = c.WorkDir
 
 	// cmd.SysProcAttr = &syscall.SysProcAttr{
 	// 	Cloneflags:   syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNS,
@@ -121,13 +132,24 @@ func (c *Container) CreateCMD() (cmd *exec.Cmd, err error) {
 	return
 }
 
-func Mount(src, rootfs, dst string) (out []byte, err error) {
-	err = pathCheck(src, rootfs, dst)
+func Mount(rootfs, dst string) (out []byte, err error) {
+	err = pathCheck(rootfs, dst)
 	if err != nil {
 		return nil, err
 	}
-	opts := fmt.Sprintf("ro,lowerdir=%v:%v", src, rootfs)
+	opts := fmt.Sprintf("ro,lowerdir=%v:%v", dst, rootfs) // we fake dst as lowerdir, to make cmd ok
+	//fmt.Println("sudo", "mount", "-t", "overlay", "overlay", "-o", opts, dst)
 	cmd := exec.Command("sudo", "mount", "-t", "overlay", "overlay", "-o", opts, dst)
+	return cmd.CombinedOutput()
+}
+
+// bind logs
+func MountBind(src, dst string) (out []byte, err error) {
+	err = pathCheck(src, dst)
+	if err != nil {
+		return nil, err
+	}
+	cmd := exec.Command("sudo", "mount", "--bind", src, dst)
 	return cmd.CombinedOutput()
 }
 
@@ -154,14 +176,10 @@ func (c *Container) Validate() error {
 	return nil
 }
 
-func pathCheck(src, rootfs, dst string) error {
+func pathCheck(src, dst string) error {
 	_, err := os.Stat(src)
 	if err != nil {
 		return fmt.Errorf("%v does not exist", src)
-	}
-	_, err = os.Stat(rootfs)
-	if err != nil {
-		return fmt.Errorf("%v does not exist", rootfs)
 	}
 	os.MkdirAll(dst, 0755)
 	_, err = os.Stat(dst)
@@ -172,7 +190,7 @@ func pathCheck(src, rootfs, dst string) error {
 }
 
 func UnMount(dst string) (out []byte, err error) {
-	cmd := exec.Command("sudo", "umount", "-f", dst)
+	cmd := exec.Command("umount", "-f", dst)
 	out, err = cmd.CombinedOutput()
 	if err != nil {
 		return nil, err
