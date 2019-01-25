@@ -58,7 +58,7 @@ func child(org, repo, env string) {
 	// CreateLink(l, t)
 	c := &container.Container{
 		Arg:        []string{"sh"},
-		Src:        filepath.Join(*srcDir, env, org, repo),
+		Src:        filepath.Join(*srcDir, org, repo, env),
 		Rootfs:     *rootFS,
 		Dst:        filepath.Join(*dstDir, org, repo),
 		BindDst:    filepath.Join(*dstDir, org, repo, "logs"),
@@ -82,10 +82,10 @@ func main() {
 		os.Exit(0)
 	}
 
-	if len(os.Args) <= 1 {
-		fmt.Println("error: no git provided")
-		os.Exit(1)
-	}
+	// if len(os.Args) <= 1 {
+	// 	fmt.Println("error: no git provided")
+	// 	os.Exit(1)
+	// }
 
 	var (
 		user string
@@ -117,8 +117,8 @@ func main() {
 		return
 	}
 	if env == "" {
-		fmt.Println("env arg not provided")
-		return
+		//fmt.Println("env arg not provided, using default env: online")
+		env = "online"
 	}
 
 	var org, repo string
@@ -128,15 +128,20 @@ func main() {
 		repo = giturl[1]
 	}
 
+	// fmt.Printf("Login as user: %v, repo: %v/%v, env: %v\n", user, org, repo, env)
+
 	if *runChild {
+		fmt.Println("You can change env by visit: http://logs.devops.haodai.net:8001/?env=pre-online")
+		fmt.Println("You can change repo by visit: http://logs.devops.haodai.net:8001/?git=yunwei/worktile")
+
 		fmt.Println("===welcome===")
 		fmt.Printf("logbase: %v, env: %v\n", git, env)
 
-		err := UserValidate(user, git)
-		if err != nil {
-			log.Println("user validate error: ", err)
-			//return
-		}
+		// err := UserValidate(user, git)
+		// if err != nil {
+		// 	log.Println("user validate error: ", err)
+		// 	// return  //ignore first
+		// }
 
 		child(org, repo, env)
 		return

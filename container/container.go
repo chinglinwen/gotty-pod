@@ -149,7 +149,7 @@ func MountBind(src, dst string) (out []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
-	cmd := exec.Command("sudo", "mount", "--bind", src, dst)
+	cmd := exec.Command("sudo", "mount", "--bind", "-o", "ro", src, dst)
 	return cmd.CombinedOutput()
 }
 
