@@ -53,7 +53,7 @@ func GetProject(git, srcDir string) (p string, err error) {
 	}
 
 	for {
-		fmt.Printf("\nPlease select the project: \n")
+		fmt.Printf("\nPlease select the project ( keyword search is ok ): \n")
 		for i, v := range inputlist {
 			if i == 0 {
 				continue
