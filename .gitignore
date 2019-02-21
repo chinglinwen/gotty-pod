@@ -1,6 +1,7 @@
 *.exe
-gotty-logs
+gotty-logs.*
 logs
 *.bak
 no-git-provide
 bak
+cre*.go
