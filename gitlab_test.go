@@ -11,7 +11,7 @@ func init() {
 }
 
 func TestGetProject(t *testing.T) {
-	p, err := GetGitProject("yunwei/worktile")
+	p, err := GetGitProject("xindaiquan/main")
 	// p, err := GetGitProject("flow_center/agent_system")
 	if err != nil {
 		t.Error("get project err", err)
@@ -21,7 +21,7 @@ func TestGetProject(t *testing.T) {
 }
 
 func TestCheckPerm(t *testing.T) {
-	envs, err := CheckPerm("flow_center/audit-api", 75)
+	envs, err := CheckPerm("xindaiquan/base-service", 50)
 	if err != nil {
 		t.Error("check perm err", err)
 	}

@@ -50,16 +50,20 @@ func CheckPerm(projectPath string, userid int) (envs []string, err error) {
 }
 
 func getAccessLevel(project *gitlab.Project, userid int) (accessLevel gitlab.AccessLevelValue, err error) {
+	var groupAccessLevel, projectAccessLevel gitlab.AccessLevelValue
 	groupMember, _, err := client().GroupMembers.GetGroupMember(project.Namespace.ID, userid)
 	if err == nil {
-		accessLevel = groupMember.AccessLevel
-		return
+		groupAccessLevel = groupMember.AccessLevel
 	}
 	projectMember, _, err := client().ProjectMembers.GetProjectMember(project.ID, userid)
-	if err != nil {
-		return
+	if err == nil {
+		projectAccessLevel = projectMember.AccessLevel
 	}
-	accessLevel = projectMember.AccessLevel
+	if groupAccessLevel > projectAccessLevel {
+		accessLevel = groupAccessLevel
+	} else {
+		accessLevel = projectAccessLevel
+	}
 	return
 }
 
@@ -76,7 +80,7 @@ func getAllowedEnv(accessLevel gitlab.AccessLevelValue) (envs []string) {
 func isEnvOk(src, env string, envs []string) bool {
 	t := filepath.Join(src, env)
 	if f, err := os.Stat(t); err != nil || !f.IsDir() {
-		// fmt.Printf("target %v is not exist", t)
+		fmt.Printf("target %v is not exist", t)
 		return false
 	}
 	for _, v := range envs {
