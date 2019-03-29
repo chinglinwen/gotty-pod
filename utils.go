@@ -3,15 +3,37 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/tidwall/gjson"
 )
+
+func printprogress() func() {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	chars := []string{"/", "-", "\\", "|"}
+
+	go func() {
+		for i := 0; ; i++ {
+			fmt.Printf("searching projects... %v\r", chars[i%4])
+			time.Sleep(100 * time.Millisecond)
+
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+		}
+	}()
+	return cancel
+}
 
 func Walk(base string) (list []string, err error) {
 	// base := "/data/fluentd"

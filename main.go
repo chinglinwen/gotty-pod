@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,14 +18,47 @@ var (
 	dstDir = flag.String("dstDir", "/tmp", "destination directory on the host")
 	rootFS = flag.String("rootfs", "/data/alpine", "rootfs on the host( eg. alpine rootfs )")
 
-	runChild    = flag.Bool("child", false, "run container")
-	user        = flag.String("user", "", "gitlab user info")
-	childgit    = flag.String("childgit", "", "gitlab git(org/repo) for container")
-	childuserid = flag.Int("childuserid", 0, "gitlab userid for container")
+	GitlabAccessToken = flag.String("gitlabtoken", "", "gitlab access token")
+	GitlabEndpoint    = flag.String("gitlaburl", "http://g.haodai.net", "gitlab base url")
+
+	runChild = flag.Bool("child", false, "run container")
+	token    = flag.String("token", "", "gitlab user token")
+	// user        = flag.String("user", "", "gitlab user info")
+	// childgit    = flag.String("childgit", "", "gitlab git(org/repo) for container")
+	// childuserid = flag.Int("childuserid", 0, "gitlab userid for container")
 
 	listenPort = flag.Int("p", 0, "local port number")
 	// dialAddr = flag.String("dial", "", "dailing address for test listening (eg. localhost:8081)")
 )
+
+func parseArgs(args []string) (user, token string) {
+	for _, v := range args[1:] {
+		arg := strings.Split(v, "=")
+		if len(arg) < 2 {
+			continue
+		}
+		if arg[0] == "token" {
+			// fmt.Println("got user ", arg[1])
+			ts := strings.Split(v, "token=")
+			if len(ts) != 2 {
+				log.Printf("parse token err expect prefix: token= ")
+				continue
+			}
+			token = ts[1]
+		}
+		if arg[0] == "user" {
+			// fmt.Println("got user ", arg[1])
+			us := strings.Split(v, "user=")
+			if len(us) != 2 {
+				log.Printf("parse user err expect prefix: user= ")
+				continue
+			}
+			user = us[1]
+		}
+		continue
+	}
+	return
+}
 
 // the container can't be run directly, there need an parent
 func run() error {
@@ -123,152 +157,58 @@ func main() {
 	// }
 
 	if *runChild {
-		// var (
-		// 	user    string
-		// 	gitlist string
+		user, token := parseArgs(os.Args)
+		if token == "" {
+			fmt.Println("token arg not provided")
+			return
+		}
 
-		// 	env string
-		// )
-		// for _, v := range os.Args[1:] {
-		// 	arg := strings.Split(v, "=")
-		// 	if len(arg) != 2 {
-		// 		continue
-		// 	}
-		// 	if arg[0] == "user" {
-		// 		user = arg[1]
-		// 	}
-		// 	if arg[0] == "git" {
-		// 		gitlist = UnCompress(arg[1])
-		// 	}
-		// 	if arg[0] == "env" {
-		// 		env = arg[1]
-		// 	}
-		// 	continue
-		// }
-		// if user == "" {
-		// 	fmt.Println("user arg not provided")
-		// 	return
-		// }
-		// // if git == "" {
-		// // 	fmt.Println("git arg not provided")
-		// // 	return
-		// // }
-		// if env == "" {
-		// 	//fmt.Println("env arg not provided, using default env: online")
-		// 	env = "online"
-		// }
-		// fmt.Printf("Hi %v\n", *user)
+		cancelprint := printprogress()
+		gitlist, err := GetProjectLists(token, *srcDir)
+		cancelprint()
+		if err != nil {
+			fmt.Printf("get project lists err: %v\n", err)
+			return
+		}
 
-		// fmt.Println("going exist")
-		// os.Exit(0)
+		git, err := GetProjectFromInput(gitlist, *srcDir)
 
-		// fmt.Println("You can change env by visit: http://logs.devops.haodai.net:8001/?env=pre-online")
-		// fmt.Println("You can change repo by visit: http://logs.devops.haodai.net:8001/?git=yunwei/worktile")
+		if err != nil {
+			fmt.Println("get project err: ", err)
+			os.Exit(1)
+		}
 
-		// git := GetProject(gitlist, *srcDir)
-
-		// var org, repo string
-		// giturl := strings.Split(git, "/")
-		// if len(giturl) == 2 {
-		// 	org = giturl[0]
-		// 	repo = giturl[1]
-		// }
-
-		envs, err := CheckPerm(*childgit, *childuserid)
+		// check user's permission.
+		envs, err := CheckPerm(git, token)
 		if err != nil {
 			fmt.Printf("check permission err: %v\n", err)
 			return
 		}
 
-		k8sgit := strings.Replace(*childgit, "_", "-", -1)
+		k8sgit := strings.Replace(git, "_", "-", -1)
 
 		var org, repo string
 		giturl := strings.Split(k8sgit, "/")
 		if len(giturl) != 2 {
-			fmt.Printf("git %v format err, expect lens 2, got  %v\n", *childgit, len(giturl))
+			fmt.Printf("git %v format err, expect lens 2, got  %v\n", git, len(giturl))
 			return
 		}
 		org = giturl[0]
 		repo = giturl[1]
 
-		fmt.Printf("\n=== Welcome ===\n")
+		fmt.Printf("\n=== Welcome %v ===\n", user)
 		fmt.Printf("logbase: %v, permit envs: %v\n", k8sgit, strings.Join(envs, ","))
 
 		child(org, repo, envs)
-		// child(org, repo, env)
 		return
 	}
-	//proceed if auth ok
-	//auth check here
 
-	// do user init
-	// create link? or change user?
-
-	// runparent(gitlist, *srcDir, env)
-	run()
-	// check command done
+	err := run()
+	if err != nil {
+		fmt.Printf("run err: %v\n", err)
+		return
+	}
 
 	fmt.Println("exited")
+	fmt.Printf("\nTry refresh the page to enter again.\n")
 }
-
-// func runparent() {
-// 	var i int // to prevent dead loop
-// 	for {
-// 		i++
-// 		//ar x int
-// 		// fmt.Println("enter interger input:")
-// 		// _, err := fmt.Scanf("%d", &x)
-// 		// fmt.Println("got input x:", x, err)
-// 		// git := GetProject(gitlist, srcDir)
-// 		// git := "yunwei/trx"
-// 		// var org, repo string
-// 		// giturl := strings.Split(git, "/")
-// 		// if len(giturl) == 2 {
-// 		// 	org = giturl[0]
-// 		// 	repo = giturl[1]
-// 		// }
-
-// 		// _, _ = org, repo
-// 		fmt.Println("starting child...")
-// 		err := run()
-// 		if err != nil {
-// 			fmt.Println("run err: ", err)
-// 			break
-// 		}
-// 		if i >= 10 {
-// 			fmt.Println("it's runned too many times, try refresh the page to enter again")
-// 			break
-// 		}
-// 	}
-// }
-
-// func runparent(gitlist, srcDir, env string) {
-// 	var i int // to prevent dead loop
-// 	for {
-// 		i++
-// 		//ar x int
-// 		// fmt.Println("enter interger input:")
-// 		// _, err := fmt.Scanf("%d", &x)
-// 		// fmt.Println("got input x:", x, err)
-// 		// git := GetProject(gitlist, srcDir)
-// 		git := "yunwei/trx"
-// 		var org, repo string
-// 		giturl := strings.Split(git, "/")
-// 		if len(giturl) == 2 {
-// 			org = giturl[0]
-// 			repo = giturl[1]
-// 		}
-
-// 		// _, _ = org, repo
-// 		fmt.Println("starting child...")
-// 		err := run(org, repo, env)
-// 		if err != nil {
-// 			fmt.Println("run err: ", err)
-// 			break
-// 		}
-// 		if i >= 10 {
-// 			fmt.Println("it's runned too many times, try refresh the page to enter again")
-// 			break
-// 		}
-// 	}
-// }

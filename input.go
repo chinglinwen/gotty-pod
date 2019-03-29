@@ -14,8 +14,7 @@ import (
 // }
 
 // Get project by user input
-func GetProject(git, srcDir string) (p string, err error) {
-	gitlist := strings.Split(git, " ")
+func GetProjectFromInput(gitlist []string, srcDir string) (p string, err error) {
 	list, e := Walk(srcDir)
 	if e != nil {
 		err = fmt.Errorf("walk error %v", e)
@@ -53,7 +52,7 @@ func GetProject(git, srcDir string) (p string, err error) {
 	}
 
 	for {
-		fmt.Printf("\nPlease select the project ( keyword search is ok ): \n")
+		fmt.Printf("\rPlease select the project ( keyword search is ok ): \n")
 		for i, v := range inputlist {
 			if i == 0 {
 				continue

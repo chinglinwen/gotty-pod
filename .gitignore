@@ -7,3 +7,4 @@ bak
 cre*.go
 gotty-logs
 gotty-logs1
+*.log

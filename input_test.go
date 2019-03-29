@@ -5,10 +5,10 @@ import (
 	"testing"
 )
 
-func TestGetProject(t *testing.T) {
-	git := "flow-center/df-openapi yunwei/trx yunwei/trx1"
+func TestGetProjectFromInut(t *testing.T) {
+	git := []string{"flow-center/df-openapi", "yunwei/trx", "yunwei/trx1"}
 	srcDir := "/data/fluentd"
-	p, err := GetProject(git, srcDir)
+	p, err := GetProjectFromInput(git, srcDir)
 	fmt.Println(p, err)
 }
 
