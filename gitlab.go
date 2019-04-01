@@ -69,6 +69,15 @@ func GetGroups(token string) (c *gitlab.Client, gs []*gitlab.Group, err error) {
 // 	return false
 // }
 
+// // https://gitlab.com/gitlab-org/gitlab-ce/issues/51508, version 11.2 only
+// func userIsInGroup(g *gitlab.Group, user string) bool {
+// 	_, _, err := client().Groups.ListAllGroupMembers(g.ID, &gitlab.ListGroupMembersOptions{
+// 		Query: &user,
+// 	})
+// 	fmt.Println(err)
+// 	return err == nil
+// }
+
 func GetProjects(token string) (c *gitlab.Client, pss []*gitlab.Project, err error) {
 
 	// for all group projects
@@ -80,17 +89,60 @@ func GetProjects(token string) (c *gitlab.Client, pss []*gitlab.Project, err err
 
 	var wg sync.WaitGroup
 
-	queue := make(chan []*gitlab.Project, len(gs))
+	queue := make(chan []*gitlab.Project, 100) // estimate value
 	wg.Add(len(gs))
 
+	// a := gitlab.PrivateVisibility
+	// access := gitlab.NoPermissions
+	// list := gitlab.ListOptions{PerPage: -1}
 	for _, g := range gs {
 		go func(g *gitlab.Group) {
+			// fmt.Println("got group", g.Path)
 			defer wg.Done()
-			ps, _, e := c.Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{})
-			if e != nil {
-				return
-			}
-			queue <- ps
+
+			// ps, _, e := client().Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{
+			// 	Visibility: &a,
+			// })
+			// if e != nil {
+			// 	return
+			// }
+			// println("len for ", len(ps), g.Path)
+			// printproject(ps, "ham")
+			// queue <- ps
+			// ps, _, e = client().Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{
+			// 	MinAccessLevel: &access,
+			// })
+			// if e != nil {
+			// 	return
+			// }
+			// println("len for ", len(ps), g.Path)
+			// printproject(ps, "ham")
+			// queue <- ps
+
+			// ps, _, e := c.Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{
+			// 	ListOptions: list,
+			// 	Visibility:  &a,
+			// })
+			// if e != nil {
+			// 	return
+			// }
+			// // spew.Dump("resp", resp)
+			// println("len for ", len(ps), g.Path)
+			// printproject(ps, "agent")
+			// queue <- ps
+			// ps, _, e = c.Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{
+			// 	ListOptions:    list,
+			// 	MinAccessLevel: &access,
+			// })
+			// if e != nil {
+			// 	return
+			// }
+			// // spew.Dump("resp", resp)
+			// println("len for ", len(ps), g.Path)
+			// printproject(ps, "agent")
+			// queue <- ps
+
+			listProjects(c, g, queue)
 		}(g)
 	}
 
@@ -104,12 +156,18 @@ func GetProjects(token string) (c *gitlab.Client, pss []*gitlab.Project, err err
 	wg.Add(1)
 	go func() {
 		// for all personal projects inclusion
-		ps, _, err := c.Projects.ListProjects(&gitlab.ListProjectsOptions{})
-		if err != nil {
-			log.Println("listprojects err", err)
-			return
-		}
-		queue <- ps
+		// ps, _, err := c.Projects.ListProjects(&gitlab.ListProjectsOptions{
+		// 	Visibility: &a,
+		// })
+		// if err != nil {
+		// 	log.Println("listprojects err", err)
+		// 	return
+		// }
+		// // println("len for personal", len(ps))
+		// // printproject(ps, "agent")
+		// queue <- ps
+		listPersonalProjects(c, queue)
+
 		wg.Done()
 	}()
 	wg.Wait()
@@ -119,7 +177,99 @@ func GetProjects(token string) (c *gitlab.Client, pss []*gitlab.Project, err err
 		log.Println(err)
 		return
 	}
+	// fmt.Println("len", len(pss))
 	return
+}
+
+func listPersonalProjects(c *gitlab.Client, queue chan []*gitlab.Project) {
+	a := gitlab.PrivateVisibility
+	// access := gitlab.NoPermissions
+	list := gitlab.ListOptions{Page: 1, PerPage: 1000} //perpage doesn't work
+
+	for i := 1; ; i++ {
+		ps, resp, err := c.Projects.ListProjects(&gitlab.ListProjectsOptions{
+			ListOptions: list,
+			Visibility:  &a,
+		})
+		if err != nil {
+			log.Println("listprojects err", err)
+			return
+		}
+
+		// println("len for personal", len(ps))
+		// printproject(ps, "agent")
+		queue <- ps
+
+		if resp.TotalPages < i {
+			break
+		}
+		list.Page = i
+	}
+}
+
+func listProjects(c *gitlab.Client, g *gitlab.Group, queue chan []*gitlab.Project) {
+	a := gitlab.PrivateVisibility
+	access := gitlab.DeveloperPermissions
+	list := gitlab.ListOptions{Page: 1, PerPage: 1000} //perpage doesn't work
+
+	// ps, _, e := client().Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{
+	// 	Visibility: &a,
+	// })
+	// if e != nil {
+	// 	return
+	// }
+	// println("len for ", len(ps), g.Path)
+	// printproject(ps, "ham")
+	// queue <- ps
+	// ps, _, e = client().Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{
+	// 	MinAccessLevel: &access,
+	// })
+	// if e != nil {
+	// 	return
+	// }
+	// println("len for ", len(ps), g.Path)
+	// printproject(ps, "ham")
+	// queue <- ps
+	for i := 1; ; i++ {
+		ps, resp, e := c.Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{
+			ListOptions:    list,
+			Visibility:     &a, //this cause need second list
+			MinAccessLevel: &access,
+		})
+		if e != nil {
+			return
+		}
+
+		// spew.Dump("resp", resp)
+		// println("len for ", len(ps), g.Path)
+		// printproject(ps, "agent")
+		queue <- ps
+
+		ps, _, e = c.Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{
+			ListOptions:    list,
+			MinAccessLevel: &access,
+		})
+		if e != nil {
+			return
+		}
+		// spew.Dump("resp", resp)
+		// println("len for ", len(ps), g.Path)
+		// printproject(ps, "agent")
+		queue <- ps
+
+		if resp.TotalPages < i {
+			break
+		}
+		list.Page = i
+	}
+}
+
+func printproject(ps []*gitlab.Project, name string) {
+	for _, v := range ps {
+		if strings.Contains(v.WebURL, name) {
+			fmt.Println("ha", v.WebURL)
+		}
+	}
 }
 
 func GetProjectsOld(token string) (c *gitlab.Client, pss []*gitlab.Project, err error) {
@@ -129,8 +279,11 @@ func GetProjectsOld(token string) (c *gitlab.Client, pss []*gitlab.Project, err 
 		log.Println("getgroups err", err)
 		return
 	}
+	a := gitlab.PrivateVisibility
 	for _, g := range gs {
-		ps, _, e := c.Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{})
+		ps, _, e := c.Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{
+			Visibility: &a,
+		})
 		if e != nil {
 			continue
 		}
@@ -182,6 +335,7 @@ func GetProjectLists(token, srcDir string) (projects []string, err error) {
 		return
 	}
 	for _, p := range pss {
+		// fmt.Println("--", p.PathWithNamespace)
 		// spew.Dump("p", p)
 		// url := strings.Split(p.WebURL, "/")
 		// if len(url) != 5 {
@@ -240,10 +394,13 @@ func CheckPerm(projectPath, token string) (envs []string, err error) {
 	// check permissions
 	project, err := GetGitProject(projectPath)
 	if err != nil {
+		err = fmt.Errorf("get git prroject err: %v", err)
 		return
 	}
+
 	al, err := getAccessLevel(project, u.ID)
 	if err != nil {
+		err = fmt.Errorf("get access level err: %v", err)
 		return
 	}
 	envs = getAllowedEnv(al)
@@ -252,12 +409,14 @@ func CheckPerm(projectPath, token string) (envs []string, err error) {
 
 func getAccessLevel(project *gitlab.Project, userid int) (accessLevel gitlab.AccessLevelValue, err error) {
 	var groupAccessLevel, projectAccessLevel gitlab.AccessLevelValue
-	groupMember, _, err := client().GroupMembers.GetGroupMember(project.Namespace.ID, userid)
-	if err == nil {
+	groupMember, _, e := client().GroupMembers.GetGroupMember(project.Namespace.ID, userid)
+	// fmt.Println("groupmembers err", err)
+	if e == nil {
 		groupAccessLevel = groupMember.AccessLevel
 	}
-	projectMember, _, err := client().ProjectMembers.GetProjectMember(project.ID, userid)
-	if err == nil {
+	projectMember, _, e := client().ProjectMembers.GetProjectMember(project.ID, userid)
+	//fmt.Println("projectmember err", err, project, userid)
+	if e == nil {
 		projectAccessLevel = projectMember.AccessLevel
 	}
 	if groupAccessLevel > projectAccessLevel {

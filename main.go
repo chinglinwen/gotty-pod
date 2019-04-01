@@ -31,29 +31,52 @@ var (
 	// dialAddr = flag.String("dial", "", "dailing address for test listening (eg. localhost:8081)")
 )
 
-func parseArgs(args []string) (user, token string) {
+var Usage = func() {
+	fmt.Printf("Usage of %v:\n", os.Args[0])
+	flag.PrintDefaults()
+
+	fmt.Println(`Environments:
+	GOTTY_USERTOKEN	-- user token for gitlab access
+	`)
+}
+
+func parseArgs(args []string) (git, user, token string) {
+	token = os.Getenv("GOTTY_USERTOKEN")
+	if token == "" {
+		fmt.Printf("error, no token found")
+		os.Exit(1)
+	}
 	for _, v := range args[1:] {
 		arg := strings.Split(v, "=")
 		if len(arg) < 2 {
 			continue
 		}
-		if arg[0] == "token" {
-			// fmt.Println("got user ", arg[1])
-			ts := strings.Split(v, "token=")
-			if len(ts) != 2 {
-				log.Printf("parse token err expect prefix: token= ")
-				continue
-			}
-			token = ts[1]
-		}
+		// if arg[0] == "token" {
+		// 	// fmt.Println("got user ", arg[1])
+		// 	s := strings.Split(v, "token=")
+		// 	if len(s) != 2 {
+		// 		log.Printf("parse token err expect prefix: token= ")
+		// 		continue
+		// 	}
+		// 	token = s[1]
+		// }
 		if arg[0] == "user" {
 			// fmt.Println("got user ", arg[1])
-			us := strings.Split(v, "user=")
-			if len(us) != 2 {
+			s := strings.Split(v, "user=")
+			if len(s) != 2 {
 				log.Printf("parse user err expect prefix: user= ")
 				continue
 			}
-			user = us[1]
+			user = s[1]
+		}
+		if arg[0] == "git" {
+			// fmt.Println("got user ", arg[1])
+			s := strings.Split(v, "git=")
+			if len(s) != 2 {
+				log.Printf("parse user err expect prefix: git= ")
+				continue
+			}
+			git = s[1]
 		}
 		continue
 	}
@@ -140,6 +163,7 @@ func child(org, repo string, envs []string) error {
 }
 
 func main() {
+	flag.Usage = Usage
 	flag.Parse()
 	if *GitlabAccessToken == "" {
 		fmt.Println("token not set, exit")
@@ -157,25 +181,29 @@ func main() {
 	// }
 
 	if *runChild {
-		user, token := parseArgs(os.Args)
+		git, user, token := parseArgs(os.Args)
 		if token == "" {
 			fmt.Println("token arg not provided")
 			return
 		}
+		fmt.Printf("Hi %v\n", strings.TrimSpace(user))
 
-		cancelprint := printprogress()
-		gitlist, err := GetProjectLists(token, *srcDir)
-		cancelprint()
-		if err != nil {
-			fmt.Printf("get project lists err: %v\n", err)
-			return
-		}
+		if git == "" {
+			fmt.Printf("\ntry append gitlab info for quicker access:\n")
+			fmt.Printf("example:    http://logs.devops.haodai.net:8001/?git=flow_center/df-openapi\n\n")
+			cancelprint := printprogress()
+			gitlist, err := GetProjectLists(token, *srcDir)
+			cancelprint()
+			if err != nil {
+				fmt.Printf("get project lists err: %v\n", err)
+				return
+			}
 
-		git, err := GetProjectFromInput(gitlist, *srcDir)
-
-		if err != nil {
-			fmt.Println("get project err: ", err)
-			os.Exit(1)
+			git, err = GetProjectFromInput(gitlist, *srcDir)
+			if err != nil {
+				fmt.Println("get project err: ", err)
+				os.Exit(1)
+			}
 		}
 
 		// check user's permission.
@@ -196,7 +224,7 @@ func main() {
 		org = giturl[0]
 		repo = giturl[1]
 
-		fmt.Printf("\n=== Welcome %v ===\n", user)
+		fmt.Printf("\n=== Welcome ===\n")
 		fmt.Printf("logbase: %v, permit envs: %v\n", k8sgit, strings.Join(envs, ","))
 
 		child(org, repo, envs)

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -12,8 +13,10 @@ func init() {
 }
 
 func TestGetProject(t *testing.T) {
-	p, err := GetGitProject("xindaiquan/main")
-	// p, err := GetGitProject("flow_center/agent_system")
+	// p, err := GetGitProject("xindaiquan/main")
+	p, err := GetGitProject("flow_center/agent-system") //this need not agent_system
+	// p, err := GetGitProject("flow_center/grade-users")
+
 	if err != nil {
 		t.Error("get project err", err)
 		return
@@ -21,8 +24,28 @@ func TestGetProject(t *testing.T) {
 	fmt.Println("got project", p)
 }
 
+func TestGetAccessLevel(t *testing.T) {
+	// p, err := GetGitProject("xindaiquan/main")
+	p, err := GetGitProject("flow_center/agent-system")
+	// p, err := GetGitProject("flow_center/grade-users")
+	if err != nil {
+		t.Error("get project err", err)
+		return
+	}
+
+	u, _ := GetUser(UserToken)
+	fmt.Printf("got project: %v\nuser id: %v\n", p, u.ID)
+	a, err := getAccessLevel(p, u.ID)
+	if err != nil {
+		t.Error("getAccessLevel err", err)
+		return
+	}
+	fmt.Println("getAccessLevel", a)
+
+}
+
 func TestGetUser(t *testing.T) {
-	u, err := GetUser("sHJm7wrnsZbnVtxNFsye")
+	u, err := GetUser(UserToken)
 	if err != nil {
 		t.Error("verify err ", err)
 		return
@@ -32,26 +55,42 @@ func TestGetUser(t *testing.T) {
 	fmt.Println(string(b))
 }
 
+// need upgrade gitlab
+// func TestUserInGroup(t *testing.T) {
+// 	_, gs, _ := GetGroups(UserToken)
+// 	u, _ := GetUser(UserToken)
+
+// 	for _, v := range gs {
+// 		fmt.Println("for", v.Path, u.Name, userIsInGroup(v, u.Name))
+// 	}
+// }
+
 func TestGetProjects(t *testing.T) {
-	_, pss, err := GetProjects("sHJm7wrnsZbnVtxNFsye")
+	_, pss, err := GetProjects(UserToken)
 	if err != nil {
 		t.Error("get projects err ", err)
 		return
 	}
 	fmt.Println("got", len(pss))
+
+	for _, v := range pss {
+		if strings.Contains(v.WebURL, "trx") {
+			fmt.Println("got", v.WebURL)
+		}
+	}
 }
 
-func TestGetProjectsOld(t *testing.T) {
-	_, pss, err := GetProjectsOld("sHJm7wrnsZbnVtxNFsye")
-	if err != nil {
-		t.Error("get projects err ", err)
-		return
-	}
-	fmt.Println("got", len(pss))
-}
+// func TestGetProjectsOld(t *testing.T) {
+// 	_, pss, err := GetProjectsOld(UserToken)
+// 	if err != nil {
+// 		t.Error("get projects err ", err)
+// 		return
+// 	}
+// 	fmt.Println("got", len(pss))
+// }
 
 func TestGetProjectLists(t *testing.T) {
-	ps, err := GetProjectLists("sHJm7wrnsZbnVtxNFsye", "/data/fluentd")
+	ps, err := GetProjectLists(UserToken, "/data/fluentd")
 	fmt.Printf("got %v projects, err: %v\n", len(ps), err)
 	for _, v := range ps {
 		fmt.Println("got", v)
@@ -67,8 +106,8 @@ func TestGetProjectLists(t *testing.T) {
 }
 
 func TestGetGroups(t *testing.T) {
-	// _, p, err := GetGroups("sHJm7wrnsZbnVtxNFsye")
-	_, p, err := GetGroups("iVLDbsPst5VCZjFdTFQo")
+	// _, p, err := GetGroups(UserToken)
+	_, p, err := GetGroups(UserToken)
 	if err != nil {
 		t.Error("get groups err ", err)
 		return
@@ -80,9 +119,11 @@ func TestGetGroups(t *testing.T) {
 }
 
 func TestCheckPerm(t *testing.T) {
-	envs, err := CheckPerm("xindaiquan/base-service", "sHJm7wrnsZbnVtxNFsye")
+	// envs, err := CheckPerm("xindaiquan/base-service", UserToken)
+	envs, err := CheckPerm("yunwei/worktile", UserToken)
 	if err != nil {
 		t.Error("check perm err", err)
+		return
 	}
 	fmt.Println("got envs", envs)
 }
