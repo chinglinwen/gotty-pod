@@ -14,7 +14,7 @@ import (
 
 const (
 	EnvOnline    = "online"
-	EnvPreOnline = "pre-online"
+	EnvPreOnline = "pre"
 	EnvTest      = "test"
 )
 

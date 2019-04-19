@@ -130,7 +130,7 @@ func TestCheckPerm(t *testing.T) {
 
 func TestGetBinds(t *testing.T) {
 	src := "/data/fluentd"
-	envs := []string{"pre-online", "test", "online"}
+	envs := []string{"pre", "test", "online"}
 	path := "/data/fluentd/flow-center/df-openapi"
 	fmt.Println(getBinds(src, path, envs))
 }
