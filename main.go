@@ -189,8 +189,9 @@ func main() {
 		fmt.Printf("Hi %v\n", strings.TrimSpace(user))
 
 		if git == "" {
-			fmt.Printf("\ntry append gitlab info for quicker access:\n")
-			fmt.Printf("example:    http://logs.devops.haodai.net:8001/?git=flow_center/df-openapi\n\n")
+			//fmt.Printf("\ntry append gitlab info for quicker access:\n")
+			fmt.Printf("\n想快点？ 添加Gitlab项目信息直接进入:\n")
+			fmt.Printf("示例:    http://logs.devops.haodai.net:8001/?git=flow_center/df-openapi\n\n")
 			cancelprint := printprogress()
 			gitlist, err := GetProjectLists(token, *srcDir)
 			cancelprint()
