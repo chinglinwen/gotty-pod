@@ -1,11 +1,9 @@
-# Gotty-logs
+# Gotty-pod
 
-## Gotty-logs working with gotty to provide k8s logs viewing
+## Gotty-pod working with gotty to provide k8s pod shell
 
 ## Architecture
 
-![arch](doc/gotty-logs-system.jpg)
 
 ## Demo
 
-![shell](doc/shell.png)
