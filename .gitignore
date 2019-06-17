@@ -1,10 +1,10 @@
 *.exe
-gotty-logs.*
+gotty-pod.*
 logs
 *.bak
 no-git-provide
 bak
 cre*.go
-gotty-logs
-gotty-logs1
+gotty-pod
+gotty-pod1
 *.log
