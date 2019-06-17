@@ -66,6 +66,7 @@ type Pod struct {
 	Env       string
 	GitName   string
 	Namespace string
+	Node      string
 }
 
 const (
@@ -80,6 +81,7 @@ func PodItems() (pods []Pod, err error) {
 		return
 	}
 	for _, v := range ps {
+		node := v.GetSpec().GetNodeName()
 		podname := v.Metadata.GetName()
 		ns := v.Metadata.GetNamespace()
 		name, env := getNameEnv(podname)
@@ -89,6 +91,7 @@ func PodItems() (pods []Pod, err error) {
 			Env:       env,
 			GitName:   getGitName(ns, name),
 			Namespace: ns,
+			Node:      node,
 		})
 	}
 	return

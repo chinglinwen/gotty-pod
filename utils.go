@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"sort"
 	"strings"
 	"time"
 
@@ -44,7 +45,7 @@ func listpods() (list map[string]k8s.Pod, err error) {
 	for _, v := range pods {
 		// fmt.Printf("got %v,%v\n", v.Name, v.Namespace)
 		// list = append(list, v.Namespace+"/"+v.Name)
-		list[v.Namespace+"/"+v.PodName] = v
+		list[v.Namespace+"/"+v.PodName+" "+v.Node] = v
 	}
 	return
 }
@@ -84,6 +85,9 @@ func Filter(podlist, gitlist []string) []string {
 			}
 		}
 	}
+	sort.Slice(loglist, func(i, j int) bool {
+		return loglist[i] < loglist[j]
+	})
 	return loglist
 }
 

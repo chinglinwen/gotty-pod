@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -55,8 +56,8 @@ func GetProjectFromInput(gitlist []string, admin bool) (pod k8s.Pod, err error) 
 		s = append(s, prompt.Suggest{
 			Text: inputlist[0],
 		})
-		return prompt.FilterFuzzy(s, d.GetWordBeforeCursor(), true)
-		// return prompt.FilterContains(s, d.GetWordBeforeCursor(), true)
+		// return prompt.FilterFuzzy(s, d.GetWordBeforeCursor(), true)
+		return prompt.FilterContains(s, d.GetWordBeforeCursor(), true)
 	}
 
 	var p string
@@ -102,9 +103,11 @@ func GetProjectFromInput(gitlist []string, admin bool) (pod k8s.Pod, err error) 
 }
 
 func searchInput(t string, inputlist []string) int {
+	s := fmt.Sprintf(".*%v.*", strings.ReplaceAll(t, " ", ".*"))
 	for i, v := range inputlist {
 		// fmt.Println("start ", i, v, t)
-		if strings.Contains(v, t) {
+		// if strings.Contains(v, t) {
+		if matched, _ := regexp.MatchString(s, v); matched {
 			return i
 		}
 	}
