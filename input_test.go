@@ -2,34 +2,33 @@ package main
 
 import (
 	"fmt"
-	"sort"
 	"testing"
 )
 
-func TestFilter(t *testing.T) {
+// func TestFilter(t *testing.T) {
 
-	_, gitlist, err := GetProjectLists(UserToken)
-	fmt.Printf("got %v projects, err: %v\n", len(gitlist), err)
+// 	_, gitlist, err := GetProjectLists(UserToken)
+// 	fmt.Printf("got %v projects, err: %v\n", len(gitlist), err)
 
-	list, e := Walk("/data/fluentd")
-	if e != nil {
-		err = fmt.Errorf("walk error %v", e)
-		return
-	}
+// 	list, e := Walk("/data/fluentd")
+// 	if e != nil {
+// 		err = fmt.Errorf("walk error %v", e)
+// 		return
+// 	}
 
-	sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
-	sort.Slice(gitlist, func(i, j int) bool { return gitlist[i] < gitlist[j] })
+// 	sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
+// 	sort.Slice(gitlist, func(i, j int) bool { return gitlist[i] < gitlist[j] })
 
-	for _, v := range list {
-		fmt.Printf("list %v\n", v)
-	}
-	for _, v := range gitlist {
-		fmt.Printf("gitlist %v\n", v)
-	}
+// 	for _, v := range list {
+// 		fmt.Printf("list %v\n", v)
+// 	}
+// 	for _, v := range gitlist {
+// 		fmt.Printf("gitlist %v\n", v)
+// 	}
 
-	loglist := Filter(list, gitlist)
-	fmt.Println("loglist", loglist)
-}
+// 	loglist := Filter(list, gitlist)
+// 	fmt.Println("loglist", loglist)
+// }
 
 // go test -v -run TestGetProjectFromInput
 func TestGetProjectFromInput(t *testing.T) {

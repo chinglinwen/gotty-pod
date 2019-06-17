@@ -57,6 +57,20 @@ func GetGroups(token string) (c *gitlab.Client, gs []*gitlab.Group, err error) {
 	return
 }
 
+func GetGroupLists(token string) (c *gitlab.Client, gs []string, err error) {
+	// for all group projects
+	_, gss, err := GetGroups(token)
+	if err != nil {
+		log.Println("getgroups err", err)
+		return
+	}
+	for _, g := range gss {
+		// log.Println("g", g.Path)
+		gs = append(gs, g.Path)
+	}
+	return
+}
+
 // shomehow miss some group, don't use it
 // func localexist(list []string, name string) bool {
 // 	k8sname := strings.Replace(name, "_", "-", -1)

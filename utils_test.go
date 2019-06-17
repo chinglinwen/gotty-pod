@@ -5,14 +5,14 @@ import (
 	"testing"
 )
 
-func TestWalk(t *testing.T) {
-	list, err := Walk("/data/fluentd")
-	if err != nil {
-		t.Error("walk err", err)
-		return
-	}
-	fmt.Println(list)
-}
+// func TestWalk(t *testing.T) {
+// 	list, err := Walk("/data/fluentd")
+// 	if err != nil {
+// 		t.Error("walk err", err)
+// 		return
+// 	}
+// 	fmt.Println(list)
+// }
 
 func TestListPods(t *testing.T) {
 	list, err := listpods()
