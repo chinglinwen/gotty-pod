@@ -219,7 +219,7 @@ func main() {
 		fmt.Println("get project err: ", err)
 		os.Exit(1)
 	}
-	log.Printf("%#v\n", pod)
+	// log.Printf("%#v\n", pod)
 	// git = pod.Namespace + "/" + pod.Name
 	// }
 
@@ -254,6 +254,11 @@ func main() {
 	fmt.Printf("\n=== Welcome %v ===\n", user)
 	// fmt.Printf("logbase: %v, permit envs: %v\n", k8sgit, strings.Join(envs, ","))
 
+	var extra string
+	if pod.Env != "" {
+		extra = ", env: " + pod.Env
+	}
+	fmt.Printf("Entering ns: %v, pod: %v%v\n", pod.Namespace, pod.PodName, extra)
 	runterm(user, pod.Namespace, pod.PodName)
 	// }
 

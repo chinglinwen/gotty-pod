@@ -19,7 +19,7 @@ const TimeLayout = "2006-1-2_15:04:05"
 func runterm(user, ns, pod string) (out string, err error) {
 	s := fmt.Sprintf("kubectl exec -it -n %v %v sh", ns, pod)
 	// log.Println("executing: ", s)
-	fmt.Printf("Entering ns: %v, pod: %v\n", ns, pod)
+
 	c := exec.Command("sh", "-c", s)
 
 	// stdinIn, _ := c.StdinPipe()
