@@ -72,9 +72,9 @@ func listpods() (list map[string]k8s.Pod, err error) {
 // 	return
 // }
 
-func Filter(dirlist, gitlist []string) []string {
+func Filter(podlist, gitlist []string) []string {
 	loglist := []string{}
-	for _, v1 := range dirlist {
+	for _, v1 := range podlist {
 		for _, v2 := range gitlist {
 			git := strings.Replace(v2, "_", "-", -1)
 			// log.Println("compare", v1, v2)

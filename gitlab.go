@@ -57,7 +57,7 @@ func GetGroups(token string) (c *gitlab.Client, gs []*gitlab.Group, err error) {
 	return
 }
 
-func GetGroupLists(token string) (c *gitlab.Client, gs []string, err error) {
+func GetGroupLists(token string) (gs []string, err error) {
 	// for all group projects
 	_, gss, err := GetGroups(token)
 	if err != nil {

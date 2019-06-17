@@ -196,19 +196,25 @@ func main() {
 
 	var pod k8s.Pod
 
+	admin, err := IsAdmin(token)
+	if err != nil {
+		fmt.Printf("check admin err: %v\n", err)
+		return
+	}
+
 	// if git == "" {
 	//fmt.Printf("\ntry append gitlab info for quicker access:\n")
 	// fmt.Printf("\n想快点？ 添加Gitlab项目信息直接进入:\n")
 	// fmt.Printf("示例:    http://logs.devops.haodai.net:8001/?git=flow_center/df-openapi\n\n")
 	cancelprint := printprogress()
-	admin, gitlist, err := GetProjectLists(token)
+	grouplist, err := GetGroupLists(token)
 	cancelprint()
 	if err != nil {
 		fmt.Printf("get project lists err: %v\n", err)
 		return
 	}
 
-	pod, err = GetProjectFromInput(gitlist, admin)
+	pod, err = GetProjectFromInput(grouplist, admin)
 	if err != nil {
 		fmt.Println("get project err: ", err)
 		os.Exit(1)
