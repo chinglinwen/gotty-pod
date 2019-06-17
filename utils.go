@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/tidwall/gjson"
+
+	"./k8s"
 )
 
 func printprogress() func() {
@@ -33,6 +35,20 @@ func printprogress() func() {
 		}
 	}()
 	return cancel
+}
+
+func listpods() (list map[string]k8s.Pod, err error) {
+	pods, err := k8s.PodItems()
+	if err != nil {
+		return
+	}
+	list = make(map[string]k8s.Pod)
+	for _, v := range pods {
+		// fmt.Printf("got %v,%v\n", v.Name, v.Namespace)
+		// list = append(list, v.Namespace+"/"+v.Name)
+		list[v.Namespace+"/"+v.PodName] = v
+	}
+	return
 }
 
 func Walk(base string) (list []string, err error) {
@@ -63,8 +79,10 @@ func Filter(dirlist, gitlist []string) []string {
 	for _, v1 := range dirlist {
 		for _, v2 := range gitlist {
 			git := strings.Replace(v2, "_", "-", -1)
-			if v1 == git {
-				loglist = append(loglist, v2) // we need gitlab name
+			// log.Println("compare", v1, v2)
+			if strings.HasPrefix(v1, git) { // support pod suffixs
+				// log.Println("got", v1)
+				loglist = append(loglist, v1) // we need pod name
 			}
 		}
 	}

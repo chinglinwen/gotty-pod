@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"./k8s"
 	prompt "github.com/c-bata/go-prompt"
 )
 
@@ -14,13 +15,20 @@ import (
 // }
 
 // Get project by user input
-func GetProjectFromInput(gitlist []string, srcDir string) (p string, err error) {
-	list, e := Walk(srcDir)
+func GetProjectFromInput(gitlist []string, admin bool) (pod k8s.Pod, err error) {
+	podlist, e := listpods()
 	if e != nil {
 		err = fmt.Errorf("walk error %v", e)
 		return
 	}
-	loglist := Filter(list, gitlist)
+	var list []string
+	for k := range podlist {
+		list = append(list, k)
+	}
+	loglist := list
+	if !admin {
+		loglist = Filter(list, gitlist)
+	}
 
 	n := len(loglist)
 	inputlist := make([]string, n+1)
@@ -51,6 +59,7 @@ func GetProjectFromInput(gitlist []string, srcDir string) (p string, err error) 
 		// return prompt.FilterContains(s, d.GetWordBeforeCursor(), true)
 	}
 
+	var p string
 	for {
 		fmt.Printf("\rPlease select the project ( keyword search is ok ): \n")
 		for i, v := range inputlist {
@@ -87,6 +96,8 @@ func GetProjectFromInput(gitlist []string, srcDir string) (p string, err error) 
 		break
 	}
 	fmt.Println("You selected " + p)
+
+	pod = podlist[p]
 	return
 }
 

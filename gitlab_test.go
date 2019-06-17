@@ -90,7 +90,7 @@ func TestGetProjects(t *testing.T) {
 // }
 
 func TestGetProjectLists(t *testing.T) {
-	ps, err := GetProjectLists(UserToken, "/data/fluentd")
+	_, ps, err := GetProjectLists(UserToken)
 	fmt.Printf("got %v projects, err: %v\n", len(ps), err)
 	for _, v := range ps {
 		fmt.Println("got", v)

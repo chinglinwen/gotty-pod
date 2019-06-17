@@ -313,20 +313,21 @@ func GetProjectsOld(token string) (c *gitlab.Client, pss []*gitlab.Project, err 
 	return
 }
 
-func GetProjectLists(token, srcDir string) (projects []string, err error) {
-	// filter list to reduce project searching time
-	list, e := Walk(srcDir)
-	if e != nil {
-		err = fmt.Errorf("walk error %v", e)
-		return
-	}
+func GetProjectLists(token string) (admin bool, projects []string, err error) {
 	isadmin, e := IsAdmin(token)
 	if err != nil {
 		err = fmt.Errorf("check admin error %v", e)
 		return
 	}
 	if isadmin {
-		return list, nil
+		// // filter list to reduce project searching time
+		// list, e := listpods()
+		// if e != nil {
+		// 	err = fmt.Errorf("walk error %v", e)
+		// 	return
+		// }
+		admin = true
+		return
 	}
 
 	_, pss, err := GetProjects(token)
@@ -346,7 +347,7 @@ func GetProjectLists(token, srcDir string) (projects []string, err error) {
 		git := strings.Replace(p.PathWithNamespace, " ", "", -1) //remove empty space
 		projects = append(projects, git)
 	}
-	return unique(projects), nil
+	return false, unique(projects), nil
 }
 
 func unique(intSlice []string) []string {

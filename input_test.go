@@ -8,7 +8,7 @@ import (
 
 func TestFilter(t *testing.T) {
 
-	gitlist, err := GetProjectLists(UserToken, "/data/fluentd")
+	_, gitlist, err := GetProjectLists(UserToken)
 	fmt.Printf("got %v projects, err: %v\n", len(gitlist), err)
 
 	list, e := Walk("/data/fluentd")
@@ -31,13 +31,14 @@ func TestFilter(t *testing.T) {
 	fmt.Println("loglist", loglist)
 }
 
-func TestGetProjectFromInut(t *testing.T) {
-	ps, err := GetProjectLists(UserToken, "/data/fluentd")
+// go test -v -run TestGetProjectFromInput
+func TestGetProjectFromInput(t *testing.T) {
+	admin, ps, err := GetProjectLists(UserToken)
 	fmt.Printf("got %v projects, err: %v\n", len(ps), err)
 
 	//git := []string{"flow-center/df-openapi", "yunwei/trx", "yunwei/trx1"}
-	srcDir := "/data/fluentd"
-	p, err := GetProjectFromInput(ps, srcDir)
+	// srcDir := "/data/fluentd"
+	p, err := GetProjectFromInput(ps, admin)
 	fmt.Println(p, err)
 }
 

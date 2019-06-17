@@ -1,0 +1,22 @@
+ {
+    "Name": "main-test-6fb5b7b84b-wss47",
+    "Namespace": "haodai"
+  },
+  {
+    "Name": "web-tools-online-59ccdb555d-x4lkb",
+    "Namespace": "haodai"
+  },
+  {
+    "Name": "web-tools-pre-5bd89d657b-kwh4r",
+    "Namespace": "haodai"
+
+
+
+get projects, may got many pods
+
+still need to choose pod, but can limit to one project
+
+
+choose pod, get git from pod
+
+
