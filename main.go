@@ -251,10 +251,10 @@ func main() {
 	// org = giturl[0]
 	// repo = giturl[1]
 
-	fmt.Printf("\n=== Welcome ===\n")
+	fmt.Printf("\n=== Welcome %v ===\n", user)
 	// fmt.Printf("logbase: %v, permit envs: %v\n", k8sgit, strings.Join(envs, ","))
 
-	runterm(pod.Namespace, pod.PodName)
+	runterm(user, pod.Namespace, pod.PodName)
 	// }
 
 	// err := run()
