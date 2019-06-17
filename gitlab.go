@@ -395,7 +395,7 @@ func CheckPerm(projectPath, token string) (envs []string, err error) {
 	// check permissions
 	project, err := GetGitProject(projectPath)
 	if err != nil {
-		err = fmt.Errorf("get git prroject err: %v", err)
+		err = fmt.Errorf("get git project err: %v", err)
 		return
 	}
 

@@ -7,8 +7,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -51,28 +49,28 @@ func listpods() (list map[string]k8s.Pod, err error) {
 	return
 }
 
-func Walk(base string) (list []string, err error) {
-	// base := "/data/fluentd"
-	err = filepath.Walk(base,
-		func(path string, f os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if !f.IsDir() {
-				return nil
-			}
-			git := strings.Split(path, "/")
-			if len(git) != 5 {
-				return nil
-			}
-			list = append(list, fmt.Sprintf("%v/%v", git[3], git[4]))
-			return nil
-		})
-	if err != nil {
-		return
-	}
-	return
-}
+// func Walk(base string) (list []string, err error) {
+// 	// base := "/data/fluentd"
+// 	err = filepath.Walk(base,
+// 		func(path string, f os.FileInfo, err error) error {
+// 			if err != nil {
+// 				return err
+// 			}
+// 			if !f.IsDir() {
+// 				return nil
+// 			}
+// 			git := strings.Split(path, "/")
+// 			if len(git) != 5 {
+// 				return nil
+// 			}
+// 			list = append(list, fmt.Sprintf("%v/%v", git[3], git[4]))
+// 			return nil
+// 		})
+// 	if err != nil {
+// 		return
+// 	}
+// 	return
+// }
 
 func Filter(dirlist, gitlist []string) []string {
 	loglist := []string{}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 
 	"./k8s"
@@ -168,6 +167,13 @@ func main() {
 		return
 	}
 
+	// out, err := runterm("flow-center", "tangguo-pre-6f575795df-fncfb")
+	// if err != nil {
+	// 	log.Fatal("run err", err)
+	// }
+	// fmt.Println(out)
+	// return
+
 	// if *dialAddr != "" {
 	// 	Dial(*dialAddr)
 	// 	os.Exit(0)
@@ -207,6 +213,7 @@ func main() {
 		fmt.Println("get project err: ", err)
 		os.Exit(1)
 	}
+	log.Printf("%#v\n", pod)
 	// git = pod.Namespace + "/" + pod.Name
 	// }
 
@@ -214,10 +221,13 @@ func main() {
 		// check user's permission, need to ignore no-exist error
 		envs, err := CheckPerm(pod.GitName, token)
 		if err != nil {
-			// if !strings.Contains(err.Error(), "Project Not Found") {
-			fmt.Printf("check permission err: %v, for git: %v\n", err, pod.GitName)
-			return
-			// }
+			envs, err = CheckPerm(strings.Replace(pod.GitName, "-", "_", -1), token)
+			if err != nil {
+				// if !strings.Contains(err.Error(), "Project Not Found") {
+				fmt.Printf("check permission err: %v, for git: %v\n", err, pod.GitName)
+				return
+				// }
+			}
 		}
 		if !envok(pod.Env, envs) {
 			fmt.Printf("env: %v permission not allowed, allowed env: %v\n", pod.Env, envs)
@@ -238,8 +248,7 @@ func main() {
 	fmt.Printf("\n=== Welcome ===\n")
 	// fmt.Printf("logbase: %v, permit envs: %v\n", k8sgit, strings.Join(envs, ","))
 
-	run(pod.Namespace, pod.PodName)
-	return
+	runterm(pod.Namespace, pod.PodName)
 	// }
 
 	// err := run()
@@ -250,17 +259,6 @@ func main() {
 
 	fmt.Println("exited")
 	fmt.Printf("\nTry refresh the page to enter again.\n")
-}
-
-func run(ns, pod string) (out string, err error) {
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("kubectl exec -it -n %v %v", ns, pod))
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("build execute build err: %v\noutput: %v\n", err, string(output))
-		return
-	}
-	out = string(output)
-	return
 }
 
 func envok(env string, envs []string) bool {

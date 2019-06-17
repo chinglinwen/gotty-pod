@@ -20,3 +20,50 @@ still need to choose pod, but can limit to one project
 choose pod, get git from pod
 
 
+
+[wen@234 k8snew gotty-pod]$ GOTTY_USERTOKEN=JQBLUdNq9twWbCbdg6m ./gotty-pod -gitlabtoken MvPVs7Z56gU2k2ADyR6J
+Hi 
+2019/06/17 11:11:22 getuser err GET http://g.haodai.net/api/v4/user: 401 {message: 401 Unauthorized}
+2019/06/17 11:11:22 getgroups err group: there's no any git group
+2019/06/17 11:11:22 getprojects err group: there's no any git group
+get project lists err: group: there's no any git group
+[wen@234 k8snew gotty-pod]$ GOTTY_USERTOKEN=8ZkssV6dftLYy-g6j7tj ./gotty-pod -gitlabtoken MvPVs7Z56gU2k2ADyR6J
+Hi 
+2019/06/17 11:11:46 getuser err GET http://g.haodai.net/api/v4/user: 401 {error: invalid_token}, {error_description: Token is expired. You can either do re-authorization or token refresh.}
+2019/06/17 11:11:46 getgroups err group: there's no any git group
+2019/06/17 11:11:46 getprojects err group: there's no any git group
+get project lists err: group: there's no any git group
+[wen@234 k8snew gotty-pod]$ 
+
+
+GOTTY_USERTOKEN=JQBLUdNq9twWbCbdg6m- ./gotty-pod -gitlabtoken MvPVs7Z56gU2k2ADyR6J
+
+You selected flow-center/yun-api-online-77db664978-69dpt
+check permission err: get git prroject err: GET http://g.haodai.net/api/v4/projects/flow-center/yun-api: 404 {message: 404 Project Not Found}, for git: flow-center/yun-api
+[wen@234 k8snew gotty-pod]$ 
+
+
+
+You selected flow-center/tangguo-pre-5f7cd775cb-vrwl8
+check permission err: get git prroject err: GET http://g.haodai.net/api/v4/projects/flow-center/tangguo: 404 {message: 404 Project Not Found}, for git: flow-center/tangguo
+[wen@234 k8snew gotty-pod]$ 
+
+it's flow_center
+
+
+
+You selected flow-center/tangguo-online-597fc44cb4-q8lsc
+2019/06/17 11:49:10 k8s.Pod{Name:"tangguo-online", PodName:"tangguo-online-597fc44cb4-q8lsc", Env:"online", GitName:"flow-center/tangguo", Namespace:"flow-center"}
+
+=== Welcome ===
+2019/06/17 11:49:11 build execute build err: exit status 1
+output: error: expected 'exec POD_NAME COMMAND [ARG1] [ARG2] ... [ARGN]'.
+POD_NAME and COMMAND are required arguments for the exec command
+See 'kubectl exec -h' for help and examples
+
+
+kubectl exec -it -n flow-center tangguo-online-597fc44cb4-q8lsc sh
+
+=== RUN   TestRun
+2019/06/17 11:56:08 executing:  kubectl exec -it -n flow-center tangguo-online-597fc44cb4-q8lsc sh
+Unable to use a TTY - input is not a terminal or the right kind of file
