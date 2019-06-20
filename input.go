@@ -7,8 +7,53 @@ import (
 	"strings"
 
 	"./k8s"
+	"github.com/AlecAivazis/survey"
 	prompt "github.com/c-bata/go-prompt"
+	jwt "github.com/dgrijalva/jwt-go"
 )
+
+func VerifyPermission() (err error) {
+	token, err := gettokenfrominput()
+	if err != nil {
+		return
+	}
+	// fmt.Printf("got token: %q", token)
+	err = validateJWT(token)
+	if err != nil {
+		err = fmt.Errorf("validate token err %v", err)
+		return
+	}
+	return
+}
+
+func gettokenfrominput() (token string, err error) {
+	prompt := &survey.Input{
+		Message: "Enter token for permission( ask yunwei for it): ",
+	}
+	err = survey.AskOne(prompt, &token)
+	if err != nil {
+		err = fmt.Errorf("enter token err %v", err)
+		return
+	}
+	// token = answers.Token
+	return
+}
+
+var SecretKey = "secret"
+
+func validateJWT(token string) error {
+	if token == "" {
+		return fmt.Errorf("token is empty")
+	}
+	t, err := jwt.Parse(token, func(tok *jwt.Token) (interface{}, error) {
+		return []byte(SecretKey), nil
+	})
+	if err == nil && t.Valid {
+		return nil
+	} else {
+		return fmt.Errorf("Invalid")
+	}
+}
 
 // type inputentry struct {
 // 	id   int

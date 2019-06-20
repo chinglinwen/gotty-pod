@@ -89,7 +89,7 @@ func TestGetProjects(t *testing.T) {
 // 	fmt.Println("got", len(pss))
 // }
 func TestGetGroupLists(t *testing.T) {
-	_, ps, err := GetGroupLists(UserToken)
+	ps, err := GetGroupLists(UserToken)
 	fmt.Printf("got %v projects, err: %v\n", len(ps), err)
 	for _, v := range ps {
 		fmt.Println("got", v)

@@ -162,8 +162,17 @@ func parseArgs(args []string) (git, user, token string) {
 func main() {
 	flag.Usage = Usage
 	flag.Parse()
+
+	err := VerifyPermission()
+	if err != nil {
+		err = fmt.Errorf("check permission err: %v", err)
+		log.Println(err)
+		return
+	}
+	fmt.Printf("token is ok, you have now allowed to enter\n")
+
 	if *GitlabAccessToken == "" {
-		fmt.Println("token not set, exit")
+		log.Println("gitlab token not set, exit")
 		return
 	}
 

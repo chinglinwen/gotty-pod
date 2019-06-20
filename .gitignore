@@ -8,3 +8,4 @@ cre*.go
 gotty-pod
 gotty-pod1
 *.log
+gentoken/gentoken

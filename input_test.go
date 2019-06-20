@@ -5,6 +5,23 @@ import (
 	"testing"
 )
 
+func TestVerifyPermission(t *testing.T) {
+	err := VerifyPermission()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+func TestValidateJWT(t *testing.T) {
+	// token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoid2VuIiwidG9rZW4iOiJoZWxsbyIsImV4cCI6MTU2MTA5MTQwOX0.wWNoipQxwSUIf3HBgxaFVmFwJU2UuASjD_iQk59JPYM"
+	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoid2VuIiwidG9rZW4iOiJoZWxsbyIsImV4cCI6MTU2MTA5NTQzOX0.CSQLZh2WB1Rn--1jAKGKIv5HbsuRhEImfL9-tCUOTZA"
+	err := validateJWT(token)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
 // func TestFilter(t *testing.T) {
 
 // 	_, gitlist, err := GetProjectLists(UserToken)
