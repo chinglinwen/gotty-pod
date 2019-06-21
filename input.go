@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -75,6 +76,9 @@ func GetProjectFromInput(gitlist []string, admin bool) (pod k8s.Pod, err error) 
 	if !admin {
 		loglist = Filter(list, gitlist)
 	}
+	sort.Slice(loglist, func(i, j int) bool {
+		return loglist[i] < loglist[j]
+	})
 
 	n := len(loglist)
 	inputlist := make([]string, n+1)

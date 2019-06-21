@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"sort"
 	"strings"
 	"time"
 
@@ -85,9 +84,9 @@ func Filter(podlist, gitlist []string) []string {
 			}
 		}
 	}
-	sort.Slice(loglist, func(i, j int) bool {
-		return loglist[i] < loglist[j]
-	})
+	// sort.Slice(loglist, func(i, j int) bool {
+	// 	return loglist[i] < loglist[j]
+	// })
 	return loglist
 }
 

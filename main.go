@@ -163,13 +163,13 @@ func main() {
 	flag.Usage = Usage
 	flag.Parse()
 
-	err := VerifyPermission()
-	if err != nil {
-		err = fmt.Errorf("check permission err: %v", err)
-		log.Println(err)
-		return
-	}
-	fmt.Printf("token is ok, you have now allowed to enter\n")
+	// err := VerifyPermission()
+	// if err != nil {
+	// 	err = fmt.Errorf("check permission err: %v", err)
+	// 	log.Println(err)
+	// 	return
+	// }
+	// fmt.Printf("token is ok, you have now allowed to enter\n")
 
 	if *GitlabAccessToken == "" {
 		log.Println("gitlab token not set, exit")
@@ -268,14 +268,12 @@ func main() {
 		extra = ", env: " + pod.Env
 	}
 	fmt.Printf("Entering ns: %v, pod: %v%v\n", pod.Namespace, pod.PodName, extra)
-	runterm(user, pod.Namespace, pod.PodName)
-	// }
+	out, err := runterm(user, pod.Namespace, pod.PodName)
 
-	// err := run()
-	// if err != nil {
-	// 	fmt.Printf("run err: %v\n", err)
-	// 	return
-	// }
+	if err != nil {
+		fmt.Printf("run err: %v\noutput: %v\n", err, out)
+		return
+	}
 
 	fmt.Println("exited")
 	fmt.Printf("\nTry refresh the page to enter again.\n")

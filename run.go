@@ -17,7 +17,11 @@ import (
 const TimeLayout = "2006-1-2_15:04:05"
 
 func runterm(user, ns, pod string) (out string, err error) {
-	s := fmt.Sprintf("kubectl exec -it -n %v %v sh", ns, pod)
+	// s := fmt.Sprintf("kubectl exec -it -n %v %v sh", ns, pod)
+
+	// let kubectl-debug to limit network and user mission
+	image := "harbor.haodai.net/ops/netshoot:v2.8"
+	s := fmt.Sprintf("kubectl debug -n %v %v --image %v /gobash", ns, pod, image)
 	// log.Println("executing: ", s)
 
 	c := exec.Command("sh", "-c", s)
@@ -39,6 +43,9 @@ func runterm(user, ns, pod string) (out string, err error) {
 	defer terminal.Restore(0, oldState)
 
 	// go io.Copy(f, os.Stdin)
+
+	// debug container won't enter it by default, need user press enter key to start
+	// defer func() { fmt.Fprintf(pw, "ls\n\r") }()
 
 	// var buf bytes.Buffer
 	tee := io.TeeReader(os.Stdin, pw)
