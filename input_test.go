@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -22,7 +23,47 @@ func TestValidateJWT(t *testing.T) {
 	}
 }
 
-// func TestFilter(t *testing.T) {
+func TestFilter(t *testing.T) {
+	podlist, e := listpods()
+	if e != nil {
+		t.Errorf("listpods error %v", e)
+		return
+	}
+	for _, v := range podlist {
+		if strings.Contains(v.Name, "tangguo") {
+			fmt.Println("pod", v)
+		}
+	}
+	var list []string
+	for k := range podlist {
+		list = append(list, k)
+	}
+	loglist := list
+
+	// gitlist := []string{"flow-center/tangguo"}
+
+	fmt.Println("start grouplist")
+	gitlist, e := GetGroupLists(UserToken)
+	if e != nil {
+		t.Errorf("GetGroupLists error %v", e)
+		return
+	}
+	var alist []string
+	for _, v := range gitlist {
+		fmt.Println("gitlist", v)
+		if strings.Contains(v, "flow_center") {
+			alist = append(alist, v)
+			fmt.Println("append", v)
+		}
+	}
+	loglist = Filter(list, alist)
+	fmt.Println("after filter", loglist)
+	for _, v := range loglist {
+		if strings.Contains(v, "tangguo") {
+			fmt.Println("v:", v)
+		}
+	}
+}
 
 // 	_, gitlist, err := GetProjectLists(UserToken)
 // 	fmt.Printf("got %v projects, err: %v\n", len(gitlist), err)
