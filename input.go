@@ -7,10 +7,13 @@ import (
 	"strconv"
 	"strings"
 
-	"./k8s"
-	"github.com/AlecAivazis/survey"
+	// "./k8s"
+	"wen/gotty-pod/k8s"
+	// "github.com/AlecAivazis/survey"
+
 	prompt "github.com/c-bata/go-prompt"
 	jwt "github.com/dgrijalva/jwt-go"
+	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 func VerifyPermission() (err error) {
@@ -31,7 +34,7 @@ func gettokenfrominput() (token string, err error) {
 	prompt := &survey.Input{
 		Message: "Enter token for permission( ask yunwei for it): ",
 	}
-	err = survey.AskOne(prompt, &token)
+	err = survey.AskOne(prompt, &token, nil)
 	if err != nil {
 		err = fmt.Errorf("enter token err %v", err)
 		return
@@ -60,6 +63,22 @@ func validateJWT(token string) error {
 // 	id   int
 // 	text string
 // }
+
+func GetProject(token string, admin bool) (pod k8s.Pod, err error) {
+	cancelprint := printprogress()
+	grouplist, err := GetGroupLists(token)
+	cancelprint()
+	if err != nil {
+		err = fmt.Errorf("get project lists err: %v", err)
+		return
+	}
+	pod, err = GetProjectFromInput(grouplist, admin)
+	if err != nil {
+		err = fmt.Errorf("get project from input err: %v", err)
+		return
+	}
+	return
+}
 
 // Get project by user input
 func GetProjectFromInput(gitlist []string, admin bool) (pod k8s.Pod, err error) {

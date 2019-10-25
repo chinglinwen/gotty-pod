@@ -223,7 +223,7 @@ func listPersonalProjects(c *gitlab.Client, queue chan []*gitlab.Project) {
 
 func listProjects(c *gitlab.Client, g *gitlab.Group, queue chan []*gitlab.Project) {
 	a := gitlab.PrivateVisibility
-	access := gitlab.DeveloperPermissions
+	// access := gitlab.DeveloperPermissions
 	list := gitlab.ListOptions{Page: 1, PerPage: 1000} //perpage doesn't work
 
 	// ps, _, e := client().Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{
@@ -246,9 +246,9 @@ func listProjects(c *gitlab.Client, g *gitlab.Group, queue chan []*gitlab.Projec
 	// queue <- ps
 	for i := 1; ; i++ {
 		ps, resp, e := c.Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{
-			ListOptions:    list,
-			Visibility:     &a, //this cause need second list
-			MinAccessLevel: &access,
+			ListOptions: list,
+			Visibility:  &a, //this cause need second list
+			// MinAccessLevel: &access,
 		})
 		if e != nil {
 			return
@@ -260,8 +260,8 @@ func listProjects(c *gitlab.Client, g *gitlab.Group, queue chan []*gitlab.Projec
 		queue <- ps
 
 		ps, _, e = c.Groups.ListGroupProjects(g.ID, &gitlab.ListGroupProjectsOptions{
-			ListOptions:    list,
-			MinAccessLevel: &access,
+			ListOptions: list,
+			// MinAccessLevel: &access,
 		})
 		if e != nil {
 			return
@@ -378,7 +378,7 @@ func unique(intSlice []string) []string {
 
 // projectPath is org/repo
 func GetGitProject(projectPath string) (project *gitlab.Project, err error) {
-	project, _, err = client().Projects.GetProject(projectPath)
+	project, _, err = client().Projects.GetProject(projectPath, nil)
 	return
 }
 

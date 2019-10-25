@@ -121,10 +121,14 @@ func getNameEnv(podname string) (name, env string) {
 }
 
 func getGitName(ns, name string) string {
+	return ns + "/" + trimEnv(name)
+}
+
+func trimEnv(name string) string {
 	name = strings.TrimSuffix(name, "-"+ONLINE)
 	name = strings.TrimSuffix(name, "-"+PRE)
 	name = strings.TrimSuffix(name, "-"+TEST)
-	return ns + "/" + name
+	return name
 }
 
 func PodListAll() (pods []*corev1.Pod, err error) {

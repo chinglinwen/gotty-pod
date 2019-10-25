@@ -12,7 +12,7 @@ import (
 
 	"github.com/tidwall/gjson"
 
-	"./k8s"
+	"wen/gotty-pod/k8s"
 )
 
 func printprogress() func() {

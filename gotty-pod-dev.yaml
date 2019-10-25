@@ -1,0 +1,46 @@
+---
+# Endpoints
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: gotty-pod-test
+  namespace: ingress
+subsets:
+  - addresses:
+      - ip: 192.168.10.234
+    ports:
+      - port: 7101
+
+# Service
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: gotty-pod-test
+  namespace: ingress
+spec:
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 7101
+
+# Ingress
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gotty-pod-test
+  namespace: ingress
+  annotations:
+    # traefik.ingress.kubernetes.io/redirect-entry-point: https
+    traefik.ingress.kubernetes.io/frontend-entry-points: auth
+    #kubernetes.io/ingress.class: test
+spec:
+  rules:
+    - host: k8spod-test.haodai.net
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: gotty-pod-test
+              servicePort: 80

@@ -6,8 +6,6 @@ import (
 	"log"
 	"os"
 	"strings"
-
-	"./k8s"
 )
 
 var (
@@ -37,7 +35,7 @@ var Usage = func() {
 	`)
 }
 
-func parseArgs(args []string) (git, user, token string) {
+func parseArgs(args []string) (git, user, token, pod string) {
 	token = os.Getenv("GOTTY_USERTOKEN")
 	if token == "" {
 		fmt.Printf("error, no token found")
@@ -75,135 +73,41 @@ func parseArgs(args []string) (git, user, token string) {
 			}
 			git = s[1]
 		}
+
+		if arg[0] == "pod" {
+			// fmt.Println("got user ", arg[1])
+			s := strings.Split(v, "pod=")
+			if len(s) != 2 {
+				log.Printf("parse user err expect prefix: pod= ")
+				continue
+			}
+			pod = s[1]
+		}
+
 		continue
 	}
 	return
 }
 
-// // the container can't be run directly, there need an parent
-// func run() error {
-// 	// args := append([]string{"-child"}, "-childorg="+org, "-childrepo="+repo, "-childenv="+env)
-// 	args := []string{"-child"}
-// 	args = append(args, os.Args[1:]...)
-// 	cmd := exec.Command("/proc/self/exe", args...)
-// 	cmd.Stdin = os.Stdin
-// 	cmd.Stdout = os.Stdout
-// 	cmd.Stderr = os.Stderr
-
-// 	cmd.SysProcAttr = &syscall.SysProcAttr{
-// 		Cloneflags:   syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNS,
-// 		Unshareflags: syscall.CLONE_NEWNS,
-// 		// Credential:   &syscall.Credential{Uid: 65534, Gid: 65534}, //set at child level
-// 	}
-// 	// fmt.Println("start the child")
-// 	return cmd.Run()
-
-// 	//dst := filepath.Join(*dstDir, org, repo)
-
-// 	// _, err := container.UnMount(dst)
-// 	// if err != nil {
-// 	// 	fmt.Println("umount err", err)
-// 	// }
-// 	//log.Println("exit")
-// }
-
-// // link doesn't mount files, can't set workDir
-// // workDir can set in the log file structure only
-// func child(org, repo string, envs []string) error {
-// 	//Listen()
-
-// 	// l := filepath.Join(*srcDir, org, repo)
-// 	// t := filepath.Join("/tmp/", org, repo)
-// 	// src := filepath.Join("/tmp/", org)
-// 	// CreateLink(l, t)
-// 	dst := filepath.Join(*dstDir, org, repo)
-// 	src := filepath.Join(*srcDir, org, repo)
-
-// 	// err := os.MkdirAll(filepath.Join(dst, "logs/online"), 0755)
-// 	// if err != nil {
-// 	// 	fmt.Println("make err", err)
-// 	// }
-// 	// _, err = os.Stat(filepath.Join(dst, "logs/online"))
-// 	// if err != nil {
-// 	// 	return fmt.Errorf("dst %v does not exist", dst)
-// 	// }
-// 	// fmt.Println("create ok", filepath.Join(dst, "logs/online"))
-
-// 	okenvs, binds, err := getBinds(src, dst, envs)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	fmt.Println("exist envs: ", okenvs)
-// 	for _, v := range okenvs {
-// 		os.MkdirAll(filepath.Join(dst, "logs", v), 0755)
-// 	}
-// 	c := &container.Container{
-// 		Arg: []string{"sh"},
-// 		// Src:        filepath.Join(dst, env),
-// 		Rootfs: *rootFS,
-// 		Dst:    dst,
-// 		// BindDst:    filepath.Join(dst, "logs"),
-// 		CGroupName: repo,
-// 		Hostname:   repo,
-// 		WorkDir:    filepath.Join("/logs"),
-// 		Binds:      binds,
-// 	}
-
-// 	return c.Run()
-// 	// if err != nil {
-// 	// 	log.Println("run err", err)
-// 	// 	return err
-// 	// }
-// 	// return nil
-// 	//log.Println("exit")
-// 	// RemoveLink(t)
-// }
-
 func main() {
 	flag.Usage = Usage
 	flag.Parse()
-
-	// err := VerifyPermission()
-	// if err != nil {
-	// 	err = fmt.Errorf("check permission err: %v", err)
-	// 	log.Println(err)
-	// 	return
-	// }
-	// fmt.Printf("token is ok, you have now allowed to enter\n")
 
 	if *GitlabAccessToken == "" {
 		log.Println("gitlab token not set, exit")
 		return
 	}
 
-	// out, err := runterm("flow-center", "tangguo-pre-6f575795df-fncfb")
-	// if err != nil {
-	// 	log.Fatal("run err", err)
-	// }
-	// fmt.Println(out)
-	// return
-
-	// if *dialAddr != "" {
-	// 	Dial(*dialAddr)
-	// 	os.Exit(0)
-	// }
-
-	// if len(os.Args) <= 1 {
-	// 	fmt.Println("error: no git provided")
-	// 	os.Exit(1)
-	// }
-
-	// if *runChild {
-	git, user, token := parseArgs(os.Args)
+	git, user, token, podname := parseArgs(os.Args)
+	if user == "" {
+		fmt.Println("user arg not provided")
+		return
+	}
 	if token == "" {
 		fmt.Println("token arg not provided")
 		return
 	}
 	fmt.Printf("Hi %v\n", strings.TrimSpace(user))
-
-	_ = git
-
-	var pod k8s.Pod
 
 	admin, err := IsAdmin(token)
 	if err != nil {
@@ -215,68 +119,100 @@ func main() {
 	//fmt.Printf("\ntry append gitlab info for quicker access:\n")
 	// fmt.Printf("\n想快点？ 添加Gitlab项目信息直接进入:\n")
 	// fmt.Printf("示例:    http://logs.devops.haodai.net:8001/?git=flow_center/df-openapi\n\n")
-	cancelprint := printprogress()
-	grouplist, err := GetGroupLists(token)
-	cancelprint()
-	if err != nil {
-		fmt.Printf("get project lists err: %v\n", err)
+
+	// log.Printf("%#v\n", pod)
+	// git = ns + "/" + pod.Name
+	// }
+
+	var ns, env string
+	if podname == "" {
+		// get pod from podname
+
+		pod, err := GetProject(token, admin)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			return
+		}
+		git = pod.GitName
+		env = pod.Env
+		ns = pod.Namespace
+		podname = pod.PodName
+	} else {
+		ns, _ = getnsrepo(git)
+		env = getenv(podname)
+	}
+
+	if git == "" {
+		fmt.Printf("git is empty, git and podname should be both provided\n")
+		return
+	}
+	if podname == "" {
+		fmt.Printf("podname is empty, git and podname should be both provided\n")
+		return
+	}
+	if ns == "" {
+		fmt.Printf("derive ns is empty\n")
+		return
+	}
+	if env == "" {
+		fmt.Printf("derive env is empty\n")
 		return
 	}
 
-	pod, err = GetProjectFromInput(grouplist, admin)
-	if err != nil {
-		fmt.Println("get project err: ", err)
-		os.Exit(1)
-	}
-	// log.Printf("%#v\n", pod)
-	// git = pod.Namespace + "/" + pod.Name
-	// }
-
 	if !admin {
 		// check user's permission, need to ignore no-exist error
-		envs, err := CheckPerm(pod.GitName, token)
+		envs, err := CheckPerm(git, token)
 		if err != nil {
-			envs, err = CheckPerm(strings.Replace(pod.GitName, "-", "_", -1), token)
+			envs, err = CheckPerm(strings.Replace(git, "-", "_", -1), token)
 			if err != nil {
 				// if !strings.Contains(err.Error(), "Project Not Found") {
-				fmt.Printf("check permission err: %v, for git: %v\n", err, pod.GitName)
+				fmt.Printf("check permission err: %v, for git: %v\n", err, git)
 				return
 				// }
 			}
 		}
-		if !envok(pod.Env, envs) {
-			fmt.Printf("env: %v permission not allowed, allowed env: %v\n", pod.Env, envs)
+		if !envok(env, envs) {
+			fmt.Printf("env: %v permission not allowed, allowed env: %v\n", env, envs)
 			return
 		}
 	}
-	// k8sgit := strings.Replace(git, "_", "-", -1)
-
-	// var org, repo string
-	// giturl := strings.Split(k8sgit, "/")
-	// if len(giturl) != 2 {
-	// 	fmt.Printf("git %v format err, expect lens 2, got  %v\n", git, len(giturl))
-	// 	return
-	// }
-	// org = giturl[0]
-	// repo = giturl[1]
 
 	fmt.Printf("\n=== Welcome %v ===\n", user)
-	// fmt.Printf("logbase: %v, permit envs: %v\n", k8sgit, strings.Join(envs, ","))
 
-	var extra string
-	if pod.Env != "" {
-		extra = ", env: " + pod.Env
+	fmt.Printf("Entering ns: %v, pod: %v, env: %v\n", ns, podname, env)
+	if env == "test" {
+		fmt.Printf("\n\nnote that: pod in test env has separate network, so not reachable\n")
 	}
-	fmt.Printf("Entering ns: %v, pod: %v%v\n", pod.Namespace, pod.PodName, extra)
-	out, err := runterm(user, pod.Namespace, pod.PodName)
-
+	out, err := runterm(user, ns, podname)
 	if err != nil {
 		fmt.Printf("run err: %v\noutput: %v\n", err, out)
+
 		return
 	}
 
 	fmt.Println("exited")
 	fmt.Printf("\nTry refresh the page to enter again.\n")
+}
+
+func getnsrepo(git string) (ns, repo string) {
+	k8sgit := strings.Replace(git, "_", "-", -1)
+	giturl := strings.Split(k8sgit, "/")
+	if len(giturl) >= 1 {
+		ns = giturl[0]
+	}
+	if len(giturl) >= 2 {
+		repo = giturl[1]
+	}
+	return
+}
+
+func getenv(podname string) (env string) {
+	p := strings.Split(podname, "-")
+	if len(p) >= 3 {
+		env = p[len(p)-3]
+		return
+	}
+	return
 }
 
 func envok(env string, envs []string) bool {
