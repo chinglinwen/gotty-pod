@@ -8,5 +8,5 @@ sh build.sh
 image="gotty-pod:$suffix"
 tag="harbor.haodai.net/ops/$image"
 echo -e "building image: $tag\n"
-docker build -t $tag .
+docker build --no-cache -t $tag .
 docker push $tag
