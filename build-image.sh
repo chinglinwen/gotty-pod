@@ -6,7 +6,7 @@ suffix=${suffix:=v1}
 sh build.sh
 
 image="gotty-pod:$suffix"
-echo -e "building image: $image\n"
 tag="harbor.haodai.net/ops/$image"
+echo -e "building image: $tag\n"
 docker build -t $tag .
 docker push $tag

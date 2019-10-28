@@ -180,9 +180,7 @@ func main() {
 	fmt.Printf("\n=== Welcome %v ===\n", user)
 
 	fmt.Printf("Entering ns: %v, pod: %v, env: %v\n", ns, podname, env)
-	if env == "test" {
-		fmt.Printf("\n\nnote that: pod in test env has separate network, so not reachable\n")
-	}
+
 	out, err := runterm(user, ns, podname)
 	if err != nil {
 		fmt.Printf("run err: %v\noutput: %v\n", err, out)
